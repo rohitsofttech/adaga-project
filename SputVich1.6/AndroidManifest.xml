@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="br.adricarr.game.sputvich6Alfa"
+    android:versionCode="1"
+    android:versionName="0.1" >
+
+    <uses-sdk android:minSdkVersion= "4" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+
+    <application
+        android:icon="@drawable/icon_nave"
+        android:label="@drawable/icon_nave" >
+        <activity
+            android:label="@string/app_name"
+            android:name="SputVichGameActivity" >
+        </activity>
+
+        <activity android:name="BaseActivityAR">
+        </activity>
+        <activity android:name="BaseJogo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="LevelGame"></activity>
+    </application>
+
+</manifest>
