@@ -15,5 +15,7 @@ public interface Constates {
 	public static final int CONTROL_BAIXO = 2;
 	public static final int CONTROL_ESQUERDA = 3;
 	public static final int CONTROL_DIREITA = 4;
+	
+	public static final int ACTIVITY_CONFIGURACAO_CONTROL = 1;
 
 }

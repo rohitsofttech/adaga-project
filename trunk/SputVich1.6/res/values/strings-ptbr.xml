@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name=" lb_gravidade">Gravidade de  </string>
+    <string name="lb_Lua">Lua</string>
+    <string name="acelerometro">Acelerometro</string>
+    <string name="proporcional">Porporcional a Nave</string>
+    <string name="porArea">Por Area da Tela</string>
+    <string name="lb_configuracao_controles">Escolha o tipo de Controles</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="confirmar">Confirmar</string>
+   
+
+    
+</resources>
