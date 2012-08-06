@@ -1,11 +1,5 @@
 package br.adricarr.game.sputvich6Alfa;
 
-import org.anddev.andengine.ui.activity.BaseGameActivity;
-
-import com.badlogic.gdx.math.Vector2;
-
-import android.util.Log;
-
 public class ThreadGame extends Thread {
 	
 	/*

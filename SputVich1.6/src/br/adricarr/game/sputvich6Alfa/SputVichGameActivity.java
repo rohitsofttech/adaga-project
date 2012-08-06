@@ -58,7 +58,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.WindowManager;
-import br.adricarr.game.sputvich6Alfa.entity.SpriteNave;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -99,7 +98,7 @@ public class SputVichGameActivity extends BaseGameActivity implements
 
 	
 	//Texturas e Imagems
-	private SpriteNave gNave;
+	//private SpriteNave gNave;
 	private Font gFont;
 	private Sprite gPlacar;
 	private Sprite gFolha;
@@ -356,7 +355,7 @@ public class SputVichGameActivity extends BaseGameActivity implements
 	}
 
 	protected void sistemaDeInteracao() {
-		if (estaBatendoNoChao(gNave)) {
+/*		if (estaBatendoNoChao(gNave)) {
 			if (NUMERO_FLAGS <= 0) {
 				colocaFlags(gNave.getX(), gNave.getY()
 						+ (gNave.getHeight() / 2));
@@ -364,7 +363,7 @@ public class SputVichGameActivity extends BaseGameActivity implements
 				gThreadGame.setAtivado(false);
 			}
 		}
-		removeMeteoro();
+		removeMeteoro();*/
 	}
 
 	public void criaMeteoro(final int pX, final int pY, final Vector2 pImpulso,
@@ -559,7 +558,7 @@ public class SputVichGameActivity extends BaseGameActivity implements
 	}
 
 	private void createNave() {
-		this.gNave = new SpriteNave(
+/*		this.gNave = new SpriteNave(
 				(CAMERA_WIDTH - this.gTextureNave.getWidth()) / 2,
 				0,
 				this.gRegionTNave);
@@ -575,7 +574,7 @@ public class SputVichGameActivity extends BaseGameActivity implements
 				PIXEL_TO_METER_RATIO_DEFAULT);
 		this.gMundoFisico.registerPhysicsConnector(new PhysicsConnector(
 				this.gNave, this.gNaveBody));
-		gScene.getBottomLayer().addEntity(gNave);
+		gScene.getBottomLayer().addEntity(gNave);*/
 	}
 
 	private void createPontuacao() {
@@ -595,7 +594,6 @@ public class SputVichGameActivity extends BaseGameActivity implements
 				(float) (CAMERA_WIDTH / 2), 0, this.gFont, "TP",
 				"XXXXXX".length());
 		gScene.getBottomLayer().addEntity(tempo);
-
 	}
 
 	protected void colocaFlags(float x, float y) {
