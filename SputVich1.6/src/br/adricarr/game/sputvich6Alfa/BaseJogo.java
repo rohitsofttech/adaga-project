@@ -11,7 +11,6 @@ import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_CIMA;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_DIREITA;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_ESQUERDA;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_NULL;
-import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.LOG;
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.camera.hud.controls.DigitalOnScreenControl;
@@ -36,14 +35,16 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.WindowManager;
+import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao;
+import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao.ConfiguracaoCursor;
 import br.adricarr.game.sputvich6Alfa.dao.DadosSputvich;
-import br.adricarr.game.sputvich6Alfa.entity.ItensViewBluider;
+import br.adricarr.game.sputvich6Alfa.entity.ItensViewBuilder;
+import br.adricarr.game.sputvich6Alfa.entity.MarcadoresNave;
 import br.adricarr.game.sputvich6Alfa.entity.SimpleNave;
 import br.adricarr.game.sputvich6Alfa.intefaces.INave;
-
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
@@ -55,13 +56,16 @@ public class BaseJogo extends BaseGameActivity implements
      * Objetos Globais
      */
     protected DadosSputvich gDados;
+    protected ConfiguracaoDao gTabelaConfiguracao;
     protected int gCameraLargura;
     protected int gCameraAltura;
     protected Camera gCamera;
     protected PhysicsWorld gMundoFisico;
     protected Scene gScene;
+    protected MenuScene gMenuScene;
     protected INave gNave;
     protected DigitalOnScreenControl gControle;
+    protected MarcadoresNave gMarcadores;
     protected final FixtureDef FIXTURE_NAVE = PhysicsFactory.createFixtureDef(
 	    0.0f, .0f, 0.0f);
     private boolean cControlerSetado;
@@ -71,6 +75,8 @@ public class BaseJogo extends BaseGameActivity implements
     private float gTouchX;
     private float gTouchY;
     private boolean gTouchDown;
+    private int gTipoConfiguracao;
+    private String gJogador;
 
     @Override
     public Engine onLoadEngine() {
@@ -87,12 +93,15 @@ public class BaseJogo extends BaseGameActivity implements
     @Override
     public void onLoadResources() {
 	this.gDados = new DadosSputvich(this);
+	this.gTabelaConfiguracao = new ConfiguracaoDao(this.gDados);
 	this.gMundoFisico = new PhysicsWorld(new Vector2(0,
 		SensorManager.GRAVITY_MOON), false);
-	this.gNave = new SimpleNave(this.mEngine, this, this.gMundoFisico,
+	this.gNave = new SimpleNave(50, 50, this.mEngine, this, this.gMundoFisico,
 		this.gCameraAltura, this.gCameraLargura);
-	this.gControle = ItensViewBluider.addControles(50, 50, this.gCamera,
+	this.gControle = ItensViewBuilder.getControles(50, 50, this.gCamera,
 		this.gNave, this, this.mEngine);
+	this.gMenuScene = ItensViewBuilder.getMenuScene(this.gCamera, this, this.mEngine);
+	this.gMarcadores = new MarcadoresNave(this.gCameraLargura/2, this.gCameraAltura/2, this, this.mEngine);
     }
 
     @Override
@@ -102,6 +111,7 @@ public class BaseJogo extends BaseGameActivity implements
 	this.gScene.getBackground().setColor(10, 10, 10);
 	this.gScene.registerUpdateHandler(this.gMundoFisico);
 	this.gScene.setChildScene(this.gControle);
+	this.gMarcadores.addNaScene(this.gScene.getTopLayer());
 	CriaParedes();
 
 	this.gScene.registerUpdateHandler(new IUpdateHandler() {
@@ -126,6 +136,29 @@ public class BaseJogo extends BaseGameActivity implements
 
     public void sistemaDeInteracao() {
 	// TODO Auto-generated method stub
+	switch (this.gTipoConfiguracao) {
+	case R.configuracao.acelerometro:
+	    break;
+	case R.configuracao.porArena:
+	    break;
+	case R.configuracao.proporcional:
+	    break;
+	}
+	
+	this.gMarcadores.setInfMarcadores(this.gNave);
+    }
+    
+    @Override
+    public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent) {
+	if (pKeyCode == KeyEvent.KEYCODE_MENU) {
+	    if (this.gScene.getChildScene() == this.gMenuScene) {
+		this.gMenuScene.back();
+		this.gScene.setChildScene(this.gControle);
+	    } else 
+		this.gScene.setChildScene(this.gMenuScene, false, true, true);
+	    return true;
+	}
+	return super.onKeyDown(pKeyCode, pEvent);
     }
 
     @Override
@@ -135,14 +168,12 @@ public class BaseJogo extends BaseGameActivity implements
 	    this.gTouchX = pSceneTouchEvent.getX();
 	    this.gTouchY = pSceneTouchEvent.getY();
 	    this.gTouchDown = true;
-	    Log.d(LOG, "Down");
 	    return true;
 	case TouchEvent.ACTION_MOVE:
 	    this.gTouchX = pSceneTouchEvent.getX();
 	    this.gTouchY = pSceneTouchEvent.getY();
 	    return true;
 	case TouchEvent.ACTION_UP:
-	    Log.d(LOG, "Up");
 	    this.gTouchDown = false;
 	    return true;
 	}
@@ -193,16 +224,41 @@ public class BaseJogo extends BaseGameActivity implements
 	this.cControleZ = (int) event.values[2];
 	this.cControleY = (int) event.values[1];
 	this.cControleX = (int) event.values[0];
-	Log.d(LOG, " X: " + this.cControleX + " Y: " + this.cControleY + " Z: "
-		+ this.cControleZ);
 	this.cControlerSetado = true;
     }
 
     @Override
     public boolean onMenuItemClicked(MenuScene pMenuScene, IMenuItem pMenuItem,
 	    float pMenuItemLocalX, float pMenuItemLocalY) {
-	// TODO Auto-generated method stub
-	return false;
+	switch (pMenuItem.getID()) {
+	case ItensViewBuilder.MENU_QUIT:
+	    this.finish();
+	    break;
+	case ItensViewBuilder.MENU_RESET:
+	    onResetScene();
+	    this.gMenuScene.back();
+	    break;
+	case ItensViewBuilder.MENU_CONTROLES:
+	    ItensViewBuilder.showConfiguracaoControles(this, this.gTabelaConfiguracao);
+	    carregaConfiguracao();
+	    this.gMenuScene.back();
+	    break;
+	}
+	this.gScene.setChildScene(this.gControle);
+	return true;
+    }
+
+    private void carregaConfiguracao() {
+	ConfiguracaoCursor lConfigCorsor = this.gTabelaConfiguracao
+		.getDaoCursor(
+			"SELECT * FROM CONFIGURACAO WHERE ID_CONFIGURACAO = 0",
+			null, null);
+	this.gTipoConfiguracao = lConfigCorsor.getTipoControle();
+	this.gJogador = lConfigCorsor.getJogador();
+    }
+
+    private void onResetScene() {
+	this.gNave.reset();
     }
 
     private void CriaParedes() {
