@@ -397,7 +397,7 @@ public class AntigoBaseGAme extends BaseGameActivity implements
 		    .findViewById(R.configuracao.radioGroup);
 	    BaseJogo janela;
 	    int vTipo;
-
+	    
 	    @Override
 	    public void onClick(View v) {
 		this.janela = (BaseJogo) dialog.getOwnerActivity();
