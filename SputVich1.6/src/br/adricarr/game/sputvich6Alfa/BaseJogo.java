@@ -13,6 +13,7 @@ import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_ESQUERD
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_NULL;
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
+import org.anddev.andengine.engine.camera.ZoomCamera;
 import org.anddev.andengine.engine.camera.hud.controls.DigitalOnScreenControl;
 import org.anddev.andengine.engine.handler.IUpdateHandler;
 import org.anddev.andengine.engine.options.EngineOptions;
@@ -21,23 +22,27 @@ import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolic
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
+import org.anddev.andengine.entity.scene.background.AutoParallaxBackground;
 import org.anddev.andengine.entity.scene.menu.MenuScene;
 import org.anddev.andengine.entity.scene.menu.MenuScene.IOnMenuItemClickListener;
 import org.anddev.andengine.entity.scene.menu.item.IMenuItem;
 import org.anddev.andengine.entity.shape.Shape;
+import org.anddev.andengine.entity.sprite.Sprite;
 import org.anddev.andengine.entity.util.FPSLogger;
 import org.anddev.andengine.extension.physics.box2d.PhysicsConnector;
 import org.anddev.andengine.extension.physics.box2d.PhysicsFactory;
 import org.anddev.andengine.extension.physics.box2d.PhysicsWorld;
 import org.anddev.andengine.input.touch.TouchEvent;
+import org.anddev.andengine.opengl.texture.Texture;
+import org.anddev.andengine.opengl.texture.TextureOptions;
+import org.anddev.andengine.opengl.texture.region.TextureRegion;
+import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
 import org.anddev.andengine.ui.activity.BaseGameActivity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.view.Display;
 import android.view.KeyEvent;
-import android.view.WindowManager;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao.ConfiguracaoCursor;
 import br.adricarr.game.sputvich6Alfa.dao.DadosSputvich;
@@ -48,6 +53,7 @@ import br.adricarr.game.sputvich6Alfa.intefaces.INave;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import org.anddev.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
 
 public class BaseJogo extends BaseGameActivity implements
 	IOnMenuItemClickListener, SensorEventListener, IOnSceneTouchListener {
@@ -57,9 +63,9 @@ public class BaseJogo extends BaseGameActivity implements
      */
     protected DadosSputvich gDados;
     protected ConfiguracaoDao gTabelaConfiguracao;
-    protected int gCameraLargura;
-    protected int gCameraAltura;
-    protected Camera gCamera;
+    protected int gCameraLargura = 800;
+    protected int gCameraAltura = 480;
+    protected ZoomCamera gCamera;
     protected PhysicsWorld gMundoFisico;
     protected Scene gScene;
     protected MenuScene gMenuScene;
@@ -77,21 +83,25 @@ public class BaseJogo extends BaseGameActivity implements
     private boolean gTouchDown;
     private int gTipoConfiguracao;
     private String gJogador;
+    private TextureRegion mParallaxLayerBack;
+    private Texture gTextureFundo;
 
     @Override
     public Engine onLoadEngine() {
-	Display display = ((WindowManager) getSystemService(WINDOW_SERVICE))
-		.getDefaultDisplay();
-	this.gCameraLargura = display.getWidth();
-	this.gCameraAltura = display.getHeight();
-	this.gCamera = new Camera(0, 0, this.gCameraLargura, this.gCameraAltura);
-	return new Engine(new EngineOptions(true, ScreenOrientation.PORTRAIT,
+	this.gCamera = new ZoomCamera(0, 0, this.gCameraLargura, this.gCameraAltura);
+	this.gCamera.setBounds(0, 4000, 0, 960);
+	this.gCamera.setBoundsEnabled(true);
+	return new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE,
 		new RatioResolutionPolicy(this.gCameraLargura,
 			this.gCameraAltura), this.gCamera));
     }
 
     @Override
     public void onLoadResources() {
+	this.gTextureFundo = new Texture(4096, 1024, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mParallaxLayerBack = TextureRegionFactory.createFromAsset(this.gTextureFundo,
+		this, "senarios/imagens/senarioJogoTeste.png", 0, 0);
+	this.mEngine.getTextureManager().loadTexture(this.gTextureFundo);
 	this.gDados = new DadosSputvich(this);
 	this.gTabelaConfiguracao = new ConfiguracaoDao(this.gDados);
 	this.gMundoFisico = new PhysicsWorld(new Vector2(0,
@@ -108,7 +118,13 @@ public class BaseJogo extends BaseGameActivity implements
     public Scene onLoadScene() {
 	this.mEngine.registerUpdateHandler(new FPSLogger());
 	this.gScene = new Scene(3);
-	this.gScene.getBackground().setColor(10, 10, 10);
+	
+	final AutoParallaxBackground autoParallaxBackground = new AutoParallaxBackground(
+		0, 0, 0, 0);
+	autoParallaxBackground.addParallaxEntity(new ParallaxEntity(0.0f,
+		new Sprite(0, 0, this.mParallaxLayerBack)));
+	this.gScene.setBackground(autoParallaxBackground);
+	
 	this.gScene.registerUpdateHandler(this.gMundoFisico);
 	this.gScene.setChildScene(this.gControle);
 	this.gMarcadores.addNaScene(this.gScene.getTopLayer());
