@@ -5,9 +5,11 @@
     <string name="acelerometro">Acelerometro</string>
     <string name="proporcional">Porporcional a Nave</string>
     <string name="porArea">Por Area da Tela</string>
-    <string name="lb_configuracao_controles">Escolha o tipo de Controles</string>
+    <string name="lb_configuracao_controles">Opções de Controle</string>
     <string name="cancelar">Cancelar</string>
     <string name="confirmar">Confirmar</string>
+    <string name="lb_nome_jogador">Nome Do Jogador</string>
+    <string name="configuracao">Configurações</string>
    
 
     

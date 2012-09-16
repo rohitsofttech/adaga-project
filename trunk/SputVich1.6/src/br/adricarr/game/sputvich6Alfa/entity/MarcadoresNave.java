@@ -16,6 +16,7 @@ public class MarcadoresNave {
     private Sprite gVelocimetro;
     private Sprite gMarcaVelocidade;
     private Sprite gMarcaAngulo;
+    private float gLarguraVelocimentro;
 
     public MarcadoresNave(final int pPosicaoX, final int pPosicaoY,
 	    final Context pContext, final Engine pEngine) {
@@ -32,15 +33,13 @@ public class MarcadoresNave {
 			"senarios/imagens/ponteiro2.png", 0, 128);
 	pEngine.getTextureManager().loadTexture(lTexureMarcadores);
 
-	this.gVelocimetro = new Sprite(pPosicaoX, pPosicaoY,
-		lVelocimetroTextureRegion);
+	this.gLarguraVelocimentro = lVelocimetroTextureRegion.getWidth();
+	this.gVelocimetro = new Sprite(pPosicaoX - lVelocimetroTextureRegion.getWidth(), pPosicaoY, lVelocimetroTextureRegion);
 	this.gVelocimetro.setScale((float) 1.3);
-	this.gMarcaVelocidade = new Sprite(pPosicaoX, pPosicaoY,
-		lPonteiroTextureRegion);
-	this.gMarcaAngulo = new Sprite(pPosicaoX, pPosicaoY,
-		lMedidorAnguloTextureRegion);
+	this.gMarcaVelocidade = new Sprite(pPosicaoX - lVelocimetroTextureRegion.getWidth(), pPosicaoY, lPonteiroTextureRegion);
+	this.gMarcaAngulo = new Sprite(pPosicaoX - lVelocimetroTextureRegion.getWidth(), pPosicaoY, lMedidorAnguloTextureRegion);
     }
-
+    
     public void addNaScene(final ILayer pLayer) {
 	try {
 	    pLayer.addEntity(this.gVelocimetro);
@@ -57,5 +56,14 @@ public class MarcadoresNave {
 		.getAngle()));
 	this.gMarcaVelocidade.setRotation(Math.abs(pNave.getBody()
 		.getLinearVelocity().y * 15) - 43);
+    }
+    
+    public void setPosicao(final float pPosicaoX, final float pPosicaoY) {
+	float lPosicaoX =  pPosicaoX - this.gLarguraVelocimentro;
+	float lPosicaoY = pPosicaoY;
+	
+	this.gVelocimetro.setPosition(lPosicaoX, lPosicaoY);
+	this.gMarcaAngulo.setPosition(lPosicaoX, lPosicaoY);
+	this.gMarcaVelocidade.setPosition(lPosicaoX, lPosicaoY);
     }
 }

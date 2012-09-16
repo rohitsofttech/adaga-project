@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="125" height="25" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="TiledTeste" tilewidth="32" tileheight="32">
+  <image source="senarios/tiled/TiledTeste.png" trans="ffffff"/>
+ </tileset>
+ <layer name="Camada 1" width="125" height="25">
+  <data encoding="base64" compression="gzip">
+   H4sIAAAAAAAAA+2Y3QrDIAyF7bqbvv8L72aCSIz5T20NHBizM8n5Ukd7llLORTSKjFquJv/lnMdzf6yvbI8h5rW+DN6QN155IrmPIov5XWYwknmNKO5QWOQ9Okn8jj7zZnVY1jKaqVmOPqz6s2TN5f0mSc6R0v0uuweI92Zvqz4yz8EZ783dRv1/gmReInlv5nHCYiXe2J6znG+bPSyieFvMAJf3gaxTZklSK6U+re8a5lmsqb7fWZ41z2Y8knm2z1uwoMiuaSue+Xfr0YIiu6ateO79+uev7Dq9ZN3fBxF27VOYU3sarVt7gvGgcKLya1WEuTQ9cnuuwalLykzLgJNTw4Ijyb4cv639bJl7ecLtHfrO8j624qbtKVtl8NkjD7R/fa7Afis5v2Z9zq7x9MTT5zvXBz1PjnJa39urqPfBi0VEDbN3CZTcUR5IatX6uqowT6jvkbyYjda8mHv2F5lDkv8grHPlsR93PqVeUOZQO5fSerbWVsv8B2Kdt1LUMAAA
+  </data>
+ </layer>
+</map>

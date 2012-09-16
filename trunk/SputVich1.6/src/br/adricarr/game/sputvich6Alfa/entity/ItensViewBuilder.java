@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 import org.anddev.andengine.engine.Engine;
 import org.anddev.andengine.engine.camera.Camera;
 import org.anddev.andengine.engine.camera.hud.controls.DigitalOnScreenControl;
+import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.menu.MenuScene;
 import org.anddev.andengine.entity.scene.menu.MenuScene.IOnMenuItemClickListener;
 import org.anddev.andengine.entity.scene.menu.item.SpriteMenuItem;
@@ -19,11 +20,11 @@ import android.content.Context;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioGroup;
 import br.adricarr.game.sputvich6Alfa.R;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao.ConfiguracaoCursor;
-import br.adricarr.game.sputvich6Alfa.dao.DadosSputvich;
 import br.adricarr.game.sputvich6Alfa.intefaces.INave;
 
 public abstract class ItensViewBuilder {
@@ -46,9 +47,9 @@ public abstract class ItensViewBuilder {
 			"base/imagens/onscreen_control_knob.png", 128, 0);
 	pEngine.getTextureManager().loadTexture(vOnScreenControlTexture);
 
-	DigitalOnScreenControl vControle = new DigitalOnScreenControl(
-		pPosicaoX, pPosicaoY, pCamera,
-		vOnScreenControlBaseTextureRegion,
+	DigitalOnScreenControl vControle = new DigitalOnScreenControl(pPosicaoX,
+		pPosicaoY - vOnScreenControlBaseTextureRegion.getWidth(),
+		pCamera, vOnScreenControlBaseTextureRegion,
 		vOnScreenControlKnobTextureRegion, 0.1f,
 		pNave.GetScreenControlListener());
 
@@ -99,27 +100,34 @@ public abstract class ItensViewBuilder {
 
 	vMenuScene.buildAnimations();
 	vMenuScene.setBackgroundEnabled(false);
-	vMenuScene.setOnMenuItemClickListener((IOnMenuItemClickListener) pContext);
+	vMenuScene
+		.setOnMenuItemClickListener((IOnMenuItemClickListener) pContext);
 	return vMenuScene;
     }
-    
-     public static void showConfiguracaoControles(final Context pContext, final ConfiguracaoDao gTabelaConfiguracao) {
-	
+
+    public static void showConfiguracaoControles(final Context pContext,
+	    final ConfiguracaoDao gTabelaConfiguracao) {
+	final ConfiguracaoCursor lConfiguracaoCursor = gTabelaConfiguracao
+		.getDaoCursor(
+			"SELECT * FROM CONFIGURACAO WHERE ID_CONFIGURACAO = 0",
+			null, null);
 	final Dialog dialog = new Dialog(pContext);
-	final int lTipoConfiguracao;
 	dialog.setContentView(R.layout.configuracao);
-	dialog.setTitle("Configuração");
+	dialog.setTitle(R.string.configuracao);
 	dialog.show();
-	
+
 	Button lCancelar = (Button) dialog
 		.findViewById(R.configuracao.cancelar);
 	Button lConfirmar = (Button) dialog
 		.findViewById(R.configuracao.confirmar);
 	final RadioGroup lRadioGrupo = (RadioGroup) dialog
 		.findViewById(R.configuracao.radioGroup);
-	lTipoConfiguracao = gTabelaConfiguracao.getDaoCursor("SELECT * FROM CONFIGURACAO WHERE ID_CONFIGURACAO = 0", null, null).getTipoControle();
-	lRadioGrupo.check(lTipoConfiguracao);
-	
+	final EditText lEditNomeJogador = (EditText) dialog
+		.findViewById(R.configuracao.editNomeJogador);
+
+	lRadioGrupo.check(lConfiguracaoCursor.getTipoControle());
+	lEditNomeJogador.setText(lConfiguracaoCursor.getNomeJogador());
+
 	lCancelar.setOnClickListener(new OnClickListener() {
 
 	    @Override
@@ -132,13 +140,15 @@ public abstract class ItensViewBuilder {
 	    @Override
 	    public void onClick(View v) {
 		ContentValues lUpdateValuess = new ContentValues();
-		lUpdateValuess.put("TP_CONTROLES", lRadioGrupo.getCheckedRadioButtonId());
-		if (gTabelaConfiguracao.update("CONFIGURACAO", lUpdateValuess, "ID_CONFIGURACAO = 0" , null) > 0)
+		lUpdateValuess.put("TP_CONTROLES",
+			lRadioGrupo.getCheckedRadioButtonId());
+		lUpdateValuess.put("DS_JOGADOR", lEditNomeJogador.getText()
+			.toString());
+		if (gTabelaConfiguracao.update("CONFIGURACAO", lUpdateValuess,
+			"ID_CONFIGURACAO = 0", null) > 0)
 		    dialog.cancel();
-		
+
 	    }
 	});
     }
-
-
 }
