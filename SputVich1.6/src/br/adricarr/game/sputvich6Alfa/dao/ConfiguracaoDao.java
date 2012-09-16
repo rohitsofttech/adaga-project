@@ -51,7 +51,7 @@ public class ConfiguracaoDao extends DaoTabela {
 	    return getInt(getColumnIndexOrThrow("TP_CONTROLES"));
 	}
 	
-	public String getJogador() {
+	public String getNomeJogador() {
 	    return getString(getColumnIndexOrThrow("DS_JOGADOR"));
 	}
     }

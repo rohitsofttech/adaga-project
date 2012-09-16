@@ -4,9 +4,12 @@ import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_BAIXO;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_CIMA;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_DIREITA;
 import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_ESQUERDA;
+import static br.adricarr.game.sputvich6Alfa.intefaces.Constates.CONTROL_NULL;
 import org.anddev.andengine.engine.camera.hud.controls.BaseOnScreenControl;
 import org.anddev.andengine.engine.camera.hud.controls.BaseOnScreenControl.IOnScreenControlListener;
 import org.anddev.andengine.entity.sprite.AnimatedSprite;
+
+import android.util.Log;
 import br.adricarr.game.sputvich6Alfa.intefaces.INave;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -84,9 +87,10 @@ public class AbstractNave implements INave {
 
 	if (vImpulso != null) {
 	    this.gBody.applyLinearImpulse(vImpulso, new Vector2(0, 0));
+	    Log.d(LOG, "O Angulo atual é: " + vAnguloAtual);
 	    if ((Math.abs(vAnguloAtual) > Math.PI / 4))
 		this.gBody.setAngularVelocity(0);
-	    else if (vAngulo != 0.000f)
+	    else if (vAngulo != 0)
 		this.gBody.setAngularVelocity(vAngulo);
 	}
 
@@ -118,7 +122,8 @@ public class AbstractNave implements INave {
 			controlaBodyNave(CONTROL_ESQUERDA);
 		    if (pValueX > 0.0f)
 			controlaBodyNave(CONTROL_DIREITA);
-		}
+		} else
+		    controlaBodyNave(CONTROL_NULL);
 	    }
 	};
     }

@@ -19,6 +19,10 @@ import org.anddev.andengine.engine.handler.IUpdateHandler;
 import org.anddev.andengine.engine.options.EngineOptions;
 import org.anddev.andengine.engine.options.EngineOptions.ScreenOrientation;
 import org.anddev.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
+import org.anddev.andengine.entity.layer.tiled.tmx.TMXLayer;
+import org.anddev.andengine.entity.layer.tiled.tmx.TMXLoader;
+import org.anddev.andengine.entity.layer.tiled.tmx.TMXTiledMap;
+import org.anddev.andengine.entity.layer.tiled.tmx.util.exception.TMXLoadException;
 import org.anddev.andengine.entity.primitive.Rectangle;
 import org.anddev.andengine.entity.scene.Scene;
 import org.anddev.andengine.entity.scene.Scene.IOnSceneTouchListener;
@@ -38,11 +42,16 @@ import org.anddev.andengine.opengl.texture.TextureOptions;
 import org.anddev.andengine.opengl.texture.region.TextureRegion;
 import org.anddev.andengine.opengl.texture.region.TextureRegionFactory;
 import org.anddev.andengine.ui.activity.BaseGameActivity;
+import org.anddev.andengine.util.Debug;
+
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
+import android.view.WindowManager;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao;
 import br.adricarr.game.sputvich6Alfa.dao.ConfiguracaoDao.ConfiguracaoCursor;
 import br.adricarr.game.sputvich6Alfa.dao.DadosSputvich;
@@ -58,13 +67,14 @@ import org.anddev.andengine.entity.scene.background.ParallaxBackground.ParallaxE
 public class BaseJogo extends BaseGameActivity implements
 	IOnMenuItemClickListener, SensorEventListener, IOnSceneTouchListener {
 
+    private static final String LOG = "BASE GAME";
     /**
      * Objetos Globais
      */
     protected DadosSputvich gDados;
     protected ConfiguracaoDao gTabelaConfiguracao;
-    protected int gCameraLargura = 800;
-    protected int gCameraAltura = 480;
+    protected int gCameraLargura;
+    protected int gCameraAltura;
     protected ZoomCamera gCamera;
     protected PhysicsWorld gMundoFisico;
     protected Scene gScene;
@@ -82,13 +92,22 @@ public class BaseJogo extends BaseGameActivity implements
     private float gTouchY;
     private boolean gTouchDown;
     private int gTipoConfiguracao;
-    private String gJogador;
+    private String gNomeJogador;
     private TextureRegion mParallaxLayerBack;
     private Texture gTextureFundo;
+    private TMXTiledMap gTmxTiledMap;
+    
+    
 
     @Override
     public Engine onLoadEngine() {
-	this.gCamera = new ZoomCamera(0, 0, this.gCameraLargura, this.gCameraAltura);
+	Display lDisplay = ((WindowManager) getSystemService(WINDOW_SERVICE))
+		.getDefaultDisplay();
+	this.gCameraLargura = lDisplay.getWidth();
+	this.gCameraAltura  = lDisplay.getHeight();
+	
+	this.gCamera = new ZoomCamera(0, 0, this.gCameraLargura,
+		this.gCameraAltura);
 	this.gCamera.setBounds(0, 4000, 0, 960);
 	this.gCamera.setBoundsEnabled(true);
 	return new Engine(new EngineOptions(true, ScreenOrientation.LANDSCAPE,
@@ -98,33 +117,38 @@ public class BaseJogo extends BaseGameActivity implements
 
     @Override
     public void onLoadResources() {
-	this.gTextureFundo = new Texture(4096, 1024, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-	this.mParallaxLayerBack = TextureRegionFactory.createFromAsset(this.gTextureFundo,
-		this, "senarios/imagens/senarioJogoTeste.png", 0, 0);
+	this.gTextureFundo = new Texture(4096, 1024,
+		TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+	this.mParallaxLayerBack = TextureRegionFactory.createFromAsset(
+		this.gTextureFundo, this,
+		"senarios/imagens/senarioJogoTeste.png", 0, 0);
 	this.mEngine.getTextureManager().loadTexture(this.gTextureFundo);
 	this.gDados = new DadosSputvich(this);
 	this.gTabelaConfiguracao = new ConfiguracaoDao(this.gDados);
 	this.gMundoFisico = new PhysicsWorld(new Vector2(0,
 		SensorManager.GRAVITY_MOON), false);
-	this.gNave = new SimpleNave(50, 50, this.mEngine, this, this.gMundoFisico,
-		this.gCameraAltura, this.gCameraLargura);
-	this.gControle = ItensViewBuilder.getControles(50, 50, this.gCamera,
-		this.gNave, this, this.mEngine);
-	this.gMenuScene = ItensViewBuilder.getMenuScene(this.gCamera, this, this.mEngine);
-	this.gMarcadores = new MarcadoresNave(this.gCameraLargura/2, this.gCameraAltura/2, this, this.mEngine);
+	this.gNave = new SimpleNave(50, 50, this.mEngine, this,
+		this.gMundoFisico, this.gCameraAltura, this.gCameraLargura);
+	this.gControle =  ItensViewBuilder.getControles(0, this.gCameraAltura, this.gCamera,  this.gNave, this, this.mEngine);
+	this.gMarcadores = new MarcadoresNave(this.gCameraLargura, 0, this, this.mEngine);
+	this.gMenuScene = ItensViewBuilder.getMenuScene(this.gCamera, this,
+		this.mEngine);
     }
 
     @Override
     public Scene onLoadScene() {
 	this.mEngine.registerUpdateHandler(new FPSLogger());
 	this.gScene = new Scene(3);
-	
-	final AutoParallaxBackground autoParallaxBackground = new AutoParallaxBackground(
-		0, 0, 0, 0);
-	autoParallaxBackground.addParallaxEntity(new ParallaxEntity(0.0f,
-		new Sprite(0, 0, this.mParallaxLayerBack)));
-	this.gScene.setBackground(autoParallaxBackground);
-	
+	try {
+	    final TMXLoader tmxLoader = new TMXLoader(this,
+		    this.mEngine.getTextureManager(), TextureOptions.NEAREST);
+	    this.gTmxTiledMap = tmxLoader.loadFromAsset(this,
+		    "senarios/tiled/tiledText.tmx");
+	} catch (final TMXLoadException tmxle) {
+	    Debug.e(tmxle);
+	}
+	final TMXLayer tmxLayer = this.gTmxTiledMap.getTMXLayers().get(0);
+	this.gScene.getBottomLayer().addEntity(tmxLayer);
 	this.gScene.registerUpdateHandler(this.gMundoFisico);
 	this.gScene.setChildScene(this.gControle);
 	this.gMarcadores.addNaScene(this.gScene.getTopLayer());
@@ -160,17 +184,17 @@ public class BaseJogo extends BaseGameActivity implements
 	case R.configuracao.proporcional:
 	    break;
 	}
-	
+	onMoveCamera(this.gNave);
 	this.gMarcadores.setInfMarcadores(this.gNave);
     }
-    
+
     @Override
     public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent) {
 	if (pKeyCode == KeyEvent.KEYCODE_MENU) {
 	    if (this.gScene.getChildScene() == this.gMenuScene) {
 		this.gMenuScene.back();
 		this.gScene.setChildScene(this.gControle);
-	    } else 
+	    } else
 		this.gScene.setChildScene(this.gMenuScene, false, true, true);
 	    return true;
 	}
@@ -255,7 +279,8 @@ public class BaseJogo extends BaseGameActivity implements
 	    this.gMenuScene.back();
 	    break;
 	case ItensViewBuilder.MENU_CONTROLES:
-	    ItensViewBuilder.showConfiguracaoControles(this, this.gTabelaConfiguracao);
+	    ItensViewBuilder.showConfiguracaoControles(this,
+		    this.gTabelaConfiguracao);
 	    carregaConfiguracao();
 	    this.gMenuScene.back();
 	    break;
@@ -270,7 +295,7 @@ public class BaseJogo extends BaseGameActivity implements
 			"SELECT * FROM CONFIGURACAO WHERE ID_CONFIGURACAO = 0",
 			null, null);
 	this.gTipoConfiguracao = lConfigCorsor.getTipoControle();
-	this.gJogador = lConfigCorsor.getJogador();
+	this.gNomeJogador = lConfigCorsor.getNomeJogador();
     }
 
     private void onResetScene() {
@@ -278,23 +303,36 @@ public class BaseJogo extends BaseGameActivity implements
     }
 
     private void CriaParedes() {
-	Shape esquerda = new Rectangle(0, 0, 2, this.gCameraAltura);
+	Shape esquerda = new Rectangle(0, 0, 2, 900);
 	PhysicsFactory.createBoxBody(this.gMundoFisico, esquerda,
 		BodyType.StaticBody, this.FIXTURE_NAVE);
 	this.gScene.getBottomLayer().addEntity(esquerda);
-	Shape direita = new Rectangle(this.gCameraLargura - 2, 0, 2,
-		this.gCameraAltura);
+	Shape direita = new Rectangle(4000 - 2, 0, 2,
+		900);
 	PhysicsFactory.createBoxBody(this.gMundoFisico, direita,
 		BodyType.StaticBody, this.FIXTURE_NAVE);
 	this.gScene.getBottomLayer().addEntity(direita);
-	Shape baixo = new Rectangle(0, this.gCameraAltura - 2,
-		this.gCameraLargura, 2);
+	Shape baixo = new Rectangle(0, 900 - 2,
+		4000, 2);
 	PhysicsFactory.createBoxBody(this.gMundoFisico, baixo,
 		BodyType.StaticBody, this.FIXTURE_NAVE);
 	this.gScene.getBottomLayer().addEntity(baixo);
 	this.gScene.getLayer(2).addEntity(this.gNave.getSprite());
 	this.gMundoFisico.registerPhysicsConnector(new PhysicsConnector(
 		this.gNave.getSprite(), this.gNave.getBody()));
+    }
+    
+    private void onMoveCamera(final INave pNave) {
+	if (((pNave.getSprite().getX() > 240) || (pNave.getSprite().getX() < 640))
+		|| ((pNave.getSprite().getY()) > 400)
+		|| (pNave.getSprite().getY() < 3600)) {
+	    this.gCamera.setCenter(pNave.getSprite().getX(), pNave.getSprite()
+		    .getY());
+	    this.gMarcadores.setPosicao(
+		    this.gCamera.getCenterX() + this.gCameraLargura/2,
+		    this.gCamera.getCenterY() - this.gCameraAltura/2);
+	}
+	
     }
 
 }
